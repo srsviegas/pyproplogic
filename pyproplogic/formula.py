@@ -137,7 +137,7 @@ class LogicFormula:
 
         """
         if self.is_atomic():
-            return [self]
+            return self
         atoms = []
         for subformula in self.components():
             atoms.extend(subformula.list_atoms())
@@ -159,7 +159,7 @@ class LogicFormula:
 
         """
         if self.is_atomic():
-            return self
+            return [self]
         else:
             subformulas = [self]
             for subformula in self.components():
