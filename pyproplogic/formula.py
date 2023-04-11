@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Union
 
 class LogicFormula:
     """
@@ -12,23 +11,33 @@ class LogicFormula:
     Attributes:
     -----------
     _operator : str
-        The operator of the logic formula, one of {'atom', '~', '&', '|', '->', '<->'}
+        The operator of the logic formula, one of {atom, ~, &, |, ->, <->}
+
     _components : str or LogicFormula objects
         The components of the logic formula, that are strings or LogicFormula objects.
 
     Notes:
     ------
-    The binary operators '&' and '|' can also be used in place of the methods LogicFormula.conjunction
-    and LogicFormula.disjunction.
+    The class supports the use of Python's binary operators to construct formulas, with the following
+    mapping between binary and logical operators:
+
+    - ~ represents negation ('not')
+    - & represents conjunction ('and')
+    - | represents disjunction ('or')
+    - >> represents implication ('if.. then')
+    - << represents equality ('if and only if')
+
+    Warning: The shift operators (>> and <<) have precedence over the operators & and |.
+    Use parentheses to enforce the correct order of operations when using this style.
         
     Examples:
     ---------
     >>> p = LogicFormula.atom('p')
     >>> q = LogicFormula.atom('q')
-    >>> p.conjunction(q)
-    LogicFormula(p ∧ q)
-    >>> (p & q).implication(p.implication(q.negation()))
-    LogicFormula(p ∧ q → (¬q → p))
+    >>> p.negation().conjunction(q.implication(p))
+    LogicFormula(¬p ∧ (q → p))
+    >>> print(~(p & q) << (~p | ~q))
+    ¬(p ∧ q) ↔ ¬p ∨ ¬q
 
     """
     _symbol_dict = {'~': '¬', '&': '∧', '|': '∨', '->': '→', '<->': '↔'}
@@ -82,6 +91,9 @@ class LogicFormula:
         """ Creates a LogicFormula object containing the negation of self. """
         return LogicFormula('~', self)
     
+    def __invert__(self):
+        return LogicFormula('~', self)
+    
     def conjunction(self, other) -> LogicFormula:
         """ Creates a LogicFormula object containing a conjunction between self and other. """
         return LogicFormula('&', self, other)
@@ -100,8 +112,14 @@ class LogicFormula:
         """ Creates a LogicFormula object containing an implication from self to other. """
         return LogicFormula('->', self, other)
     
+    def __rshift__(self, other) -> LogicFormula:
+        return LogicFormula('->', self, other)
+    
     def biconditional(self, other) -> LogicFormula:
         """ Creates a LogicFormula object containing a biconditional between self and other. """
+        return LogicFormula('<->', self, other)
+    
+    def __lshift__(self, other) -> LogicFormula:
         return LogicFormula('<->', self, other)
     
     def is_atomic(self) -> bool:
@@ -222,9 +240,9 @@ class LogicFormula:
         ---------
         >>> p = LogicFormula.atom('p')
         >>> q = LogicFormula.atom('q')
-        >>> formula = (p & q.implication(p)).negation()
+        >>> formula = (p.conjunction(q.implication(p))).negation()
         >>> print(formula.to_latex())
-        \lnot(p \land (q \\rightarrow p))
+        \lnot (p \land (q \\rightarrow p))
         
         """
         current_dict = LogicFormula._symbol_dict
