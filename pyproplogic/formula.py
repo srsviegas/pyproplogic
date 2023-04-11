@@ -318,3 +318,9 @@ class LogicFormula:
             "\\end{{tikzpicture}}"
         )
         return tikz_code.format(tikz_parameters, string)
+    
+P = LogicFormula.atom('p')
+Q = LogicFormula.atom('q')
+R = LogicFormula.atom('r')
+S = LogicFormula.atom('s')
+T = LogicFormula.atom('t')
