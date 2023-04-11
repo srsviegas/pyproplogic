@@ -36,8 +36,10 @@ class LogicFormula:
     def __init__(self, operator: str, *components: LogicFormula):
         if operator not in LogicFormula._valid_operators():
             raise ValueError('invalid operator: ' + operator)
-        if not components:
-            raise ValueError('components should not be empty')
+        if operator in ['atom', '~'] and len(components) != 1:
+            raise ValueError(f"unary operator '{operator}' requires exactly 1 component")
+        if operator not in ['atom', '~'] and len(components) != 2:
+            raise ValueError(f"binary operator '{operator}' requires exactly 2 components")
         self._operator = operator
         self._components = components
 
@@ -139,7 +141,7 @@ class LogicFormula:
 
         """
         if self.is_atomic():
-            return self.components()
+            return self
         else:
             subformulas = [self]
             for subformula in self.components():
@@ -231,15 +233,19 @@ class LogicFormula:
         LogicFormula._symbol_dict = current_dict
         return latex_formula
     
-    def to_latex_tikz(self, tikz_parameters='sibling distance=25mm/#1') -> str:
+    def to_latex_tikz(self, tikz_parameters='sibling distance=25mm/#1', use_spaces=False) -> str:
         """ 
         Returns a LaTeX string representation of the logic formula's parse tree for the TikZ package. 
 
         Parameters:
         -----------
         tikz_parameters : str, optional
-            A sring of TikZ parameters that will be user to customize the parse tree.
-            The default value is 'sibling distance=25mm/#1'.
+            String of TikZ parameters that will be used to customize the parse tree.
+            Default value is 'sibling distance=25mm/#1'.
+
+        use_spaces : bool, optional
+            Boolean that indicates if spaces should be used instead of tabs.
+            Default value is False.
 
         Returns:
         --------
@@ -268,24 +274,25 @@ class LogicFormula:
             '->': '\\rightarrow', 
             '<->': '\\leftrightarrow'
         }
-        child_string = 'child {{node {{${}$}}'
+        tab = ' '*4 if use_spaces else '\t'
+        child_template = 'child {{node {{${}$}}'
+
         def parse_tree(formula: LogicFormula, level=1) -> str:
-            identation = '\t'*level
+            identation = tab*level
             if formula.is_atomic():
-                return identation + child_string.format(str(formula)) + '}'
-            string = identation + child_string.format(latex_symbols[formula.operator()])
+                return identation + child_template.format(str(formula)) + '}'
+            string = identation + child_template.format(latex_symbols[formula.operator()])
             for subformula in formula.components():
                 string += '\n' + identation + parse_tree(subformula, level+1)
             string += '}'
             return string
 
         if self.is_atomic():
-            return f'\t\\node {{${self.operator()}$}}'
-        string = f'\t\\node {{${latex_symbols[self.operator()]}$}}'
+            return f'{tab}\\node {{${self.operator()}$}}'
+        string = f'{tab}\\node {{${latex_symbols[self.operator()]}$}}'
         for subformula in self.components():
-            string += '\n\t' + parse_tree(subformula)
+            string += '\n' + tab + parse_tree(subformula)
         string += ';'
-
         tikz_code =  (
             "\\begin{{tikzpicture}}\n"
             "[level/.style={{{}}}]\n"
