@@ -57,7 +57,6 @@ class LogicFormula:
         self._components = components
 
     def __str__(self) -> str:
-        """ Returns a string representation of the logic formula, using UTF-8 symbols. """
         if self.operator() == 'atom':
             return self.components()[0]
         precedence = {'atom': 4, '~': 3, '&': 2, '|': 2, '->': 1, '<->': 1}
@@ -72,6 +71,14 @@ class LogicFormula:
         
     def __repr__(self) -> str:
         return f'LogicFormula({self.__str__()})'
+    
+    def __contains__(self, item: LogicFormula) -> bool:
+        if not isinstance(item, LogicFormula):
+            raise TypeError(f"'in' requires LogicFormula as left operand, not {type(item).__name__}")
+        return (item.to_ascii()) in (self.to_ascii())
+    
+    def __iter__(self) -> LogicFormula:
+        return iter(self.list_subformulas())
     
     def operator(self) -> str:
         """ Returns the logic operator of the current formula. """
@@ -192,15 +199,39 @@ class LogicFormula:
         """ Sets the symbol dictionary to use Unicode symbols for the logical operators. """
         cls._current_dict = cls._unicode_dict
 
+    def to_unicode(self) -> str:
+        """ Returns the formula as an Unicode string. """
+        previous_dict = LogicFormula._current_dict
+        LogicFormula.set_unicode_symbols()
+        unicode_formula = str(self)
+        LogicFormula._current_dict = previous_dict
+        return unicode_formula
+
     @classmethod
     def set_utf_symbols(cls):
         """ Sets the symbol dictionary to use UTF-8 symbols for the logical operators. """
         cls._current_dict = cls._utf_dict
 
+    def to_utf(self) -> str:
+        """ Returns the formula as an UTF-8 string. """
+        previous_dict = LogicFormula._current_dict
+        LogicFormula.set_utf_symbols()
+        utf_formula = str(self)
+        LogicFormula._current_dict = previous_dict
+        return utf_formula
+
     @classmethod
     def set_ascii_symbols(cls):
         """ Sets the symbol dictionary to use ASCII symbols for the logical operatos. """
         cls._current_dict = {key:key for key in cls._current_dict.keys()}
+
+    def to_ascii(self) -> str:
+        """ Returns the formula as an ASCII string. """
+        previous_dict = LogicFormula._current_dict
+        LogicFormula.set_ascii_symbols()
+        ascii_formula = str(self)
+        LogicFormula._current_dict = previous_dict
+        return ascii_formula
 
     @classmethod
     def set_latex_symbols(cls):
