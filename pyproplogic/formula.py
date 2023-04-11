@@ -78,7 +78,7 @@ class LogicFormula:
         return (item.to_ascii()) in (self.to_ascii())
     
     def __iter__(self) -> LogicFormula:
-        return iter(self.list_subformulas())
+        return iter(self.get_subformulas())
     
     def operator(self) -> str:
         """ Returns the logic operator of the current formula. """
@@ -132,9 +132,9 @@ class LogicFormula:
         """ Determines if the current formula is an atom or not. """
         return self.operator() == 'atom'
 
-    def list_atoms(self) -> list[str]:
+    def get_atoms(self) -> list[LogicFormula]:
         """
-        Returns a list containing all atoms of the current formula.
+        Returns a list containing all atoms of the formula.
 
         Returns:
         --------
@@ -146,10 +146,10 @@ class LogicFormula:
             return self
         atoms = []
         for subformula in self.components():
-            atoms.extend(subformula.list_atoms())
+            atoms.extend(subformula.get_atoms())
         return sorted(set(atoms), key=str)
         
-    def list_subformulas(self) -> list[LogicFormula]:
+    def get_subformulas(self) -> list[LogicFormula]:
         """
         Returns a list containing all subformulas of the current formula.
 
@@ -169,7 +169,7 @@ class LogicFormula:
         else:
             subformulas = [self]
             for subformula in self.components():
-                subformulas.extend(subformula.list_subformulas())
+                subformulas.extend(subformula.get_subformulas())
         return sorted(set(subformulas), key=str)
     
     @classmethod
@@ -180,7 +180,7 @@ class LogicFormula:
     @classmethod
     def set_symbols(cls, symbols: dict[str]):
         """
-        Sets the symbol dictionary to use custom symbols given by a dictionary.
+        Sets the formula representation, with symbols provided by a dictionary.
         
         Parameters:
         -----------
@@ -240,8 +240,8 @@ class LogicFormula:
 
     def to_latex(self) -> str:
         """
-        Returns a LaTeX string representation of the logic formula, with special characters replaced
-        by LaTeX commands.
+        Returns a LaTeX string representation of the logic formula, with operators replaced by
+        LaTeX commands.
 
         Returns:
         --------
@@ -324,9 +324,3 @@ class LogicFormula:
             "\\end{{tikzpicture}}"
         )
         return tikz_code.format(tikz_parameters, string)
-    
-P = LogicFormula.atom('p')
-Q = LogicFormula.atom('q')
-R = LogicFormula.atom('r')
-S = LogicFormula.atom('s')
-T = LogicFormula.atom('t')
