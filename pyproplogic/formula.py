@@ -40,10 +40,14 @@ class LogicFormula:
     ¬(p ∧ q) ↔ ¬p ∨ ¬q
 
     """
-    _symbol_dict = {'~': '¬', '&': '∧', '|': '∨', '->': '→', '<->': '↔'}
+    _valid_operators = {'atom', '~', '&', '|', '->', '<->'}
+    _unicode_dict = {'~': '¬', '&': '∧', '|': '∨', '->': '→', '<->': '↔'}
+    _utf_dict = {'~': '\u00AC', '&': '\u2227', '|': '\u2228', '->': '\u2192', '<->': '\u2194'}
+    _latex_dict = {'~': '\\lnot ', '&': '\\land', '|': '\\lor', '->': '\\rightarrow', '<->': '\\leftrightarrow'}
+    _current_dict = _unicode_dict
     
     def __init__(self, operator: str, *components: LogicFormula):
-        if operator not in LogicFormula._valid_operators():
+        if operator not in LogicFormula._valid_operators:
             raise ValueError('invalid operator: ' + operator)
         if operator in ['atom', '~'] and len(components) != 1:
             raise ValueError(f"unary operator '{operator}' requires exactly 1 component")
@@ -62,9 +66,9 @@ class LogicFormula:
             for subformula in self.components()
         ]
         if self.operator() == '~':
-            return LogicFormula._symbol_dict['~'] + subformula_str[0]
-        elif self.operator() in LogicFormula._symbol_dict:
-            return f' {LogicFormula._symbol_dict[self.operator()]} '.join(subformula_str)
+            return LogicFormula._current_dict['~'] + subformula_str[0]
+        elif self.operator() in LogicFormula._current_dict:
+            return f' {LogicFormula._current_dict[self.operator()]} '.join(subformula_str)
         
     def __repr__(self) -> str:
         return f'LogicFormula({self.__str__()})'
@@ -76,11 +80,6 @@ class LogicFormula:
     def components(self) -> tuple[LogicFormula]:
         """ Returns a tuple containing the component(s) of the current formula. """
         return self._components
-
-    @staticmethod
-    def _valid_operators() -> tuple[str]:
-        """ Returns a set containing the valid operators of propositional logic. """
-        return {'atom', '~', '&', '|', '->', '<->'}
     
     @staticmethod
     def atom(symbol: str) -> LogicFormula:
@@ -169,7 +168,7 @@ class LogicFormula:
     @classmethod
     def get_symbols(cls) -> dict[str]:
         """ Returns the symbol dictionary with the logical operators and its current representation """
-        return cls._symbol_dict
+        return cls._current_dict
 
     @classmethod
     def set_symbols(cls, symbols: dict[str]):
@@ -183,7 +182,7 @@ class LogicFormula:
             The dictionary doesn't need to be complete; any missing symbol will stay unchanged.
 
         """
-        cls._symbol_dict = {
+        cls._current_dict = {
             key: symbols.get(key, cls.get_symbols()[key])
             for key in cls.get_symbols().keys()
         }
@@ -191,40 +190,22 @@ class LogicFormula:
     @classmethod
     def set_unicode_symbols(cls):
         """ Sets the symbol dictionary to use Unicode symbols for the logical operators. """
-        cls._symbol_dict = {
-            '~': '¬', 
-            '&': '∧', 
-            '|': '∨', 
-            '->': '→', 
-            '<->': '↔'
-        }
+        cls._current_dict = cls._unicode_dict
 
     @classmethod
     def set_utf_symbols(cls):
         """ Sets the symbol dictionary to use UTF-8 symbols for the logical operators. """
-        cls._symbol_dict = {
-            '~': '\u00AC', 
-            '&': '\u2227', 
-            '|': '\u2228', 
-            '->': '\u2192', 
-            '<->': '\u2194'
-        }
+        cls._current_dict = cls._utf_dict
 
     @classmethod
     def set_ascii_symbols(cls):
         """ Sets the symbol dictionary to use ASCII symbols for the logical operatos. """
-        cls._symbol_dict = {symbol:symbol for symbol in cls._symbol_dict.keys()}
+        cls._current_dict = {key:key for key in cls._current_dict.keys()}
 
     @classmethod
     def set_latex_symbols(cls):
         """ Sets the symbol dictionary to use LaTeX commands for the logical operators. """
-        cls._symbol_dict = {
-            '~': '\\lnot ', 
-            '&': '\\land', 
-            '|': '\\lor', 
-            '->': '\\rightarrow', 
-            '<->': '\\leftrightarrow'
-        }
+        cls._current_dict = cls._latex_dict
 
     def to_latex(self) -> str:
         """
@@ -245,10 +226,10 @@ class LogicFormula:
         \lnot (p \land (q \\rightarrow p))
         
         """
-        current_dict = LogicFormula._symbol_dict
+        previous_dict = LogicFormula._current_dict
         LogicFormula.set_latex_symbols()
         latex_formula = str(self)
-        LogicFormula._symbol_dict = current_dict
+        LogicFormula._current_dict = previous_dict
         return latex_formula
     
     def to_latex_tikz(self, tikz_parameters='sibling distance=25mm/#1', use_spaces=False) -> str:
@@ -285,13 +266,7 @@ class LogicFormula:
             \end{tikzpicture}
             
         """
-        latex_symbols = {
-            '~': '\\lnot', 
-            '&': '\\land', 
-            '|': '\\lor', 
-            '->': '\\rightarrow', 
-            '<->': '\\leftrightarrow'
-        }
+        latex = LogicFormula._latex_dict
         tab = ' '*4 if use_spaces else '\t'
         child_template = 'child {{node {{${}$}}'
 
@@ -299,7 +274,7 @@ class LogicFormula:
             identation = tab*level
             if formula.is_atomic():
                 return identation + child_template.format(str(formula)) + '}'
-            string = identation + child_template.format(latex_symbols[formula.operator()])
+            string = identation + child_template.format(latex[formula.operator()])
             for subformula in formula.components():
                 string += '\n' + identation + parse_tree(subformula, level+1)
             string += '}'
@@ -307,7 +282,7 @@ class LogicFormula:
 
         if self.is_atomic():
             return f'{tab}\\node {{${self.operator()}$}}'
-        string = f'{tab}\\node {{${latex_symbols[self.operator()]}$}}'
+        string = f'{tab}\\node {{${latex[self.operator()]}$}}'
         for subformula in self.components():
             string += '\n' + tab + parse_tree(subformula)
         string += ';'
