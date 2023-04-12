@@ -1,4 +1,2 @@
-from .atoms import *
-from .identities import *
-
-__all__ = ['P', 'Q', 'R', 'S', 'T']
+from commonformulas.atoms import *
+from commonformulas.identities import *
