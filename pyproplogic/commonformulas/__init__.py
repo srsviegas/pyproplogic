@@ -1,2 +1,2 @@
-from commonformulas.atoms import *
-from commonformulas.identities import *
+from pyproplogic.commonformulas.atoms import *
+from pyproplogic.commonformulas.identities import *

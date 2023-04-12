@@ -1,4 +1,4 @@
-from .formula import LogicFormula
+from pyproplogic.formula import LogicFormula
 
 __title__ = 'pyproplogic'
 __author__ = 'srsviegas'
