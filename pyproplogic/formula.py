@@ -171,7 +171,35 @@ class LogicFormula:
             for subformula in self.components():
                 subformulas.extend(subformula.get_subformulas())
         return sorted(set(subformulas), key=str)
-    
+
+    def evaluate(self, truth_values: dict[bool]) -> bool:
+        """
+        Evaluates the formula using the truth values given by a dictionary.
+
+        Parameters:
+        -----------
+        truth_values: dict of bool
+            A dictionary mapping atomic propositions to boolean truth values.
+
+        Returns:
+        bool
+            The truth value of the logic formula.
+
+        """
+        if self.is_atomic():
+            return truth_values[self] if self in truth_values else truth_values[self.components()[0]]
+        elif self.operator() == '~':
+            return not self.components()[0].evaluate(truth_values)
+        left, right = self.components()
+        if self.operator() == '&':
+            return left.evaluate(truth_values) and right.evaluate(truth_values)
+        elif self.operator() == '|':
+            return left.evaluate(truth_values) or right.evaluate(truth_values)
+        elif self.operator() == '->':
+            return (not left.evaluate(truth_values)) or right.evaluate(truth_values)
+        elif self.operator() == '<->':
+            return left.evaluate(truth_values) == right.evaluate(truth_values)
+
     @classmethod
     def get_symbols(cls) -> dict[str]:
         """ Returns the symbol dictionary with the logical operators and its current representation """
