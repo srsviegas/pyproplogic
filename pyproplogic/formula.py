@@ -1,4 +1,5 @@
 from __future__ import annotations
+import warnings
 
 
 class LogicFormula:
@@ -194,15 +195,15 @@ class LogicFormula:
             subformulas = [self]
             for subformula in self.components():
                 subformulas.extend(subformula.get_subformulas())
-        return sorted(set(subformulas), key=str)
+        return sorted(set(subformulas), key=lambda f: (len(str(f)), str(f)))
 
-    def evaluate(self, truth_values: dict[bool]) -> bool:
+    def evaluate(self, valuation: dict[bool]) -> bool:
         """
         Evaluates the formula using the truth values given by a dictionary.
 
         Parameters:
         -----------
-        truth_values: dict of bool
+        valuation: dict of bool
             A dictionary mapping atomic propositions to boolean truth values.
 
         Returns:
@@ -212,21 +213,70 @@ class LogicFormula:
         """
         if self.is_atomic():
             return (
-                truth_values[self]
-                if self in truth_values
-                else truth_values[self.components()[0]]
+                valuation[self]
+                if self in valuation
+                else valuation[self.components()[0]]
             )
         elif self.operator() == "~":
-            return not self.components()[0].evaluate(truth_values)
+            return not self.components()[0].evaluate(valuation)
         left, right = self.components()
         if self.operator() == "&":
-            return left.evaluate(truth_values) and right.evaluate(truth_values)
+            return left.evaluate(valuation) and right.evaluate(valuation)
         elif self.operator() == "|":
-            return left.evaluate(truth_values) or right.evaluate(truth_values)
+            return left.evaluate(valuation) or right.evaluate(valuation)
         elif self.operator() == "->":
-            return (not left.evaluate(truth_values)) or right.evaluate(truth_values)
+            return (not left.evaluate(valuation)) or right.evaluate(valuation)
         elif self.operator() == "<->":
-            return left.evaluate(truth_values) == right.evaluate(truth_values)
+            return left.evaluate(valuation) == right.evaluate(valuation)
+
+    def get_truth_table(self, show_only_finals=False, to_list=False):
+        """
+        Generates the truth table of the logical formula.
+
+        Parameters:
+        -----------
+        show_only_finals: bool, optional
+            Decides if the truth table should only contain the atoms and final results.
+            Default value is False.
+
+        to_list: bool, optional
+            Decides if the return value should be a list of lists instead of a DataFrame object.
+            Default value is False.
+
+        Returns:
+        --------
+        truth_table: pandas.DataFrame or list of lists
+            The truth table of the logical formula.
+
+        """
+        from itertools import product
+
+        try:
+            from pandas import DataFrame
+        except ImportError:
+            warnings.warn(
+                "Optional dependency 'pandas' not found. Falling back to a list of lists.",
+                ImportWarning,
+            )
+            DataFrame = None
+
+        atoms = self.get_atoms()
+        if show_only_finals:
+            subformulas = atoms + [self]
+        else:
+            subformulas = self.get_subformulas()
+        table = []
+        valuation_dicts = [
+            {atom: value for atom, value in zip(atoms, valuation)}
+            for valuation in product((True, False), repeat=len(atoms))
+        ]
+        for valuation in valuation_dicts:
+            table.append([formula.evaluate(valuation) for formula in subformulas])
+        return (
+            DataFrame(table, columns=subformulas)
+            if DataFrame is not None or to_list
+            else ([subformulas] + table)
+        )
 
     @classmethod
     def get_symbols(cls) -> dict[str]:

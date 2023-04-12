@@ -21,13 +21,13 @@ LogicFormula.get_atoms(self) -> list[LogicFormula]
 ```python
 LogicFormula.get_subformulas(self) -> list[LogicFormula]
 ```
-* [ ] **Evaluate**: receives truth values for every atom and reduces the formula to a boolean or LogicFormula object.
+* [X] **Evaluate**: receives truth values for every atom and reduces the formula to a boolean or LogicFormula object.
 ```python
 LogicFormula.evaluate(self, interpretation: dict) -> Union[bool, LogicFormula]
 ```
-* [ ] **Truth table**: generates the truth table of the logical formula.
+* [X] **Get Truth table**: generates a truth table for the logical formula.
 ```python
-LogicFormula.truth_table(self) -> pd.DataFrame
+LogicFormula.get_truth_table(self) -> pd.DataFrame
 ```
 * [ ] **Is tautology**: decides if formula is a tautology.
 ```python
