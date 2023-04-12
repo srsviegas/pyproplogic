@@ -1,5 +1,4 @@
-from pyproplogic import LogicFormula
-from commonformulas.atoms import PHI, PSI, CHI
+from pyproplogic.commonformulas import PHI, PSI, CHI
 
 DOUBLE_NEGATION = (~~PHI).biconditional(PHI)
 
