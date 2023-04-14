@@ -101,6 +101,16 @@ class LogicFormula:
                 f"'in' requires LogicFormula as left operand, not {type(item).__name__}"
             )
         return (item.to_ascii()) in (self.to_ascii())
+    
+    def __eq__(self, other) -> bool:
+        if self.operator() == other.operator():
+            if self.operator() in ('atom', '~'):
+                return self.components() == other.components()
+            return all(
+                self_subf == other_subf 
+                for self_subf, other_subf 
+                in zip(self.components(), other.components())
+            )
 
     def __iter__(self) -> LogicFormula:
         return iter(self.get_subformulas())
