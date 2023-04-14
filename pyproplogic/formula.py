@@ -233,6 +233,11 @@ class LogicFormula:
         """
         Generates the truth table of the logical formula.
 
+        Notes:
+        ------
+        By default, the table is returned as a pandas.DataFrame object. If the Pandas package is
+        not found, the method returns a list of lists instead.
+
         Parameters:
         -----------
         show_only_finals: bool, optional
@@ -251,14 +256,15 @@ class LogicFormula:
         """
         from itertools import product
 
-        try:
-            from pandas import DataFrame
-        except ImportError:
-            warnings.warn(
-                "Optional dependency 'pandas' not found. Falling back to a list of lists.",
-                ImportWarning,
-            )
-            DataFrame = None
+        if not to_list:
+            try:
+                from pandas import DataFrame
+            except ImportError:
+                warnings.warn(
+                    "Optional dependency 'pandas' not found. Falling back to a list of lists.",
+                    ImportWarning,
+                )
+                DataFrame = None
 
         atoms = self.get_atoms()
         if show_only_finals:
@@ -273,10 +279,94 @@ class LogicFormula:
         for valuation in valuation_dicts:
             table.append([formula.evaluate(valuation) for formula in subformulas])
         return (
-            DataFrame(table, columns=subformulas)
-            if DataFrame is not None or to_list
-            else ([subformulas] + table)
+            [subformulas] + table
+            if to_list or DataFrame is None
+            else (DataFrame(table, columns=subformulas))
         )
+
+    def is_tautology(self) -> bool:
+        """Checks if the logical formula is a tautology, i.e., it evaluates to true
+        for all possible valuations."""
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        return all(row[-1] for row in truth_table)
+
+    def is_contradiction(self) -> bool:
+        """Checks if the logical formula is a contradiction, i.e., it evaluates to false
+        for all possible valuations."""
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        return all(not row[-1] for row in truth_table)
+
+    def is_satisfiable(self) -> bool:
+        """Checks if the logical formula is satisfiable, i.e., it evaluates to true
+        for at least one valuation."""
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        return any(row[-1] for row in truth_table)
+
+    def get_satisfiable_valuations(self, string_atoms=False) -> list[dict]:
+        """
+        Returns a list of valuations that satisfy the logical formula.
+
+        Parameters:
+        -----------
+        string_atoms: bool, optional
+            Decides if the keys in the valuation dictionaries should be string representations of
+            the atoms, instead of the LogicFormula objects.
+            Default value is False.
+
+        Returns:
+        --------
+        satisfiable_valuations: list of dict
+            List of all valuations that satisfy the logical formula.
+            Each element of the list is a dictionary, with atoms as keys and their corresponding
+            boolean values.
+
+        """
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        atoms = truth_table[0][:-1]
+        return [
+            {
+                str(atom) if string_atoms else atom: value
+                for atom, value in zip(atoms, row)
+            }
+            for row in truth_table[1:]
+            if row[-1]
+        ]
+
+    def is_falsifiable(self) -> bool:
+        """Checks if the logical formula is falsifiable, i.e., it evaluates to false
+        for at least one valuation."""
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        return any(not row[-1] for row in truth_table)
+    
+    def get_falsifiable_valuations(self, string_atoms=False) -> list[dict]:
+        """
+        Returns a list of valuations that falsify the logical formula.
+
+        Parameters:
+        -----------
+        string_atoms: bool, optional
+            Decides if the keys in the valuation dictionaries should be string representations of
+            the atoms, instead of the LogicFormula objects.
+            Default value is False.
+
+        Returns:
+        --------
+        falsifiable_valuations: list of dict
+            List of all valuations that falsify the logical formula.
+            Each element of the list is a dictionary, with atoms as keys and their corresponding
+            boolean values.
+
+        """
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        atoms = truth_table[0][:-1]
+        return [
+            {
+                str(atom) if string_atoms else atom: value
+                for atom, value in zip(atoms, row)
+            }
+            for row in truth_table[1:]
+            if not row[-1]
+        ]
 
     @classmethod
     def get_symbols(cls) -> dict[str]:

@@ -21,27 +21,27 @@ LogicFormula.get_atoms(self) -> list[LogicFormula]
 ```python
 LogicFormula.get_subformulas(self) -> list[LogicFormula]
 ```
-* [X] **Evaluate**: receives truth values for every atom and reduces the formula to a boolean or LogicFormula object.
+* [X] **Evaluate**: receives truth values for every atom and evaluates the logic formula.
 ```python
-LogicFormula.evaluate(self, interpretation: dict) -> Union[bool, LogicFormula]
+LogicFormula.evaluate(self, valuation: dict) -> bool
 ```
 * [X] **Get Truth table**: generates a truth table for the logical formula.
 ```python
 LogicFormula.get_truth_table(self) -> pd.DataFrame
 ```
-* [ ] **Is tautology**: decides if formula is a tautology.
+* [X] **Is tautology**: decides if formula is a tautology.
 ```python
 LogicFormula.is_tautology(self) -> bool
 ```
-* [ ] **Is contradiction**: decides if formula is a contradiction.
+* [X] **Is contradiction**: decides if formula is a contradiction.
 ```python
 LogicFormula.is_contradiction(self) -> bool
 ```
-* [ ] **Is satisfiable**: decides if formula is satisfiable.
+* [X] **Is satisfiable**: decides if formula is satisfiable.
 ```python
 LogicFormula.is_satisfiable(self) -> bool
 ```
-* [ ] **Is falsifiable**: decides if formula is falsifiable.
+* [X] **Is falsifiable**: decides if formula is falsifiable.
 ```python
 LogicFormula.is_falsifiable(self) -> bool
 ```
