@@ -45,7 +45,7 @@ LogicFormula.is_satisfiable(self) -> bool
 ```python
 LogicFormula.is_falsifiable(self) -> bool
 ```
-* [ ] **Is equivalent**: decides if two logic formulas are logically equivalent.
+* [X] **Is equivalent**: decides if two logic formulas are logically equivalent.
 ```python
 LogicFormula.is_equivalent(self, other: LogicFormula) -> bool
 ```

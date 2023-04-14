@@ -168,7 +168,7 @@ class LogicFormula:
 
         """
         if self.is_atomic():
-            return self
+            return [self]
         atoms = []
         for subformula in self.components():
             atoms.extend(subformula.get_atoms())
@@ -287,20 +287,19 @@ class LogicFormula:
     def is_tautology(self) -> bool:
         """Checks if the logical formula is a tautology, i.e., it evaluates to true
         for all possible valuations."""
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)[1:]
         return all(row[-1] for row in truth_table)
 
     def is_contradiction(self) -> bool:
         """Checks if the logical formula is a contradiction, i.e., it evaluates to false
         for all possible valuations."""
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)[1:]
         return all(not row[-1] for row in truth_table)
 
     def is_satisfiable(self) -> bool:
         """Checks if the logical formula is satisfiable, i.e., it evaluates to true
         for at least one valuation."""
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
-        return any(row[-1] for row in truth_table)
+        return not self.is_contradiction()
 
     def get_satisfiable_valuations(self, string_atoms=False) -> list[dict]:
         """
@@ -335,8 +334,7 @@ class LogicFormula:
     def is_falsifiable(self) -> bool:
         """Checks if the logical formula is falsifiable, i.e., it evaluates to false
         for at least one valuation."""
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
-        return any(not row[-1] for row in truth_table)
+        return not self.is_tautology()
     
     def get_falsifiable_valuations(self, string_atoms=False) -> list[dict]:
         """
@@ -367,6 +365,18 @@ class LogicFormula:
             for row in truth_table[1:]
             if not row[-1]
         ]
+    
+    def is_equivalent(self, other: LogicFormula) -> bool:
+        """
+        Checks if the current formula is logically equivalent to another formula instance.
+
+        Parameters:
+        -----------
+        other: LogicFormula
+            The other LogicFormula object to be compared with the current formula.
+
+        """
+        return self.biconditional(other).is_tautology()
 
     @classmethod
     def get_symbols(cls) -> dict[str]:
