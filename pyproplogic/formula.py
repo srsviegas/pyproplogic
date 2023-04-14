@@ -77,7 +77,7 @@ class LogicFormula:
 
     def __str__(self) -> str:
         if self.operator() == "atom":
-            return self.components()[0]
+            return self.components()
         precedence = {"atom": 4, "~": 3, "&": 2, "|": 2, "->": 1, "<->": 1}
         subformula_str = [
             f"({subformula})"
@@ -111,7 +111,7 @@ class LogicFormula:
 
     def components(self) -> tuple[LogicFormula]:
         """Returns a tuple containing the component(s) of the current formula."""
-        return self._components
+        return self._components if len(self._components) > 1 else self._components[0]
 
     @staticmethod
     def atom(symbol: str) -> LogicFormula:
@@ -169,6 +169,8 @@ class LogicFormula:
         """
         if self.is_atomic():
             return [self]
+        if self.operator() == "~":
+            return self.components().get_atoms()
         atoms = []
         for subformula in self.components():
             atoms.extend(subformula.get_atoms())
@@ -191,6 +193,8 @@ class LogicFormula:
         """
         if self.is_atomic():
             return [self]
+        elif self.operator() == "~":
+            return [self] + self.components().get_subformulas()
         else:
             subformulas = [self]
             for subformula in self.components():
@@ -213,12 +217,10 @@ class LogicFormula:
         """
         if self.is_atomic():
             return (
-                valuation[self]
-                if self in valuation
-                else valuation[self.components()[0]]
+                valuation[self] if self in valuation else valuation[self.components()]
             )
         elif self.operator() == "~":
-            return not self.components()[0].evaluate(valuation)
+            return not self.components().evaluate(valuation)
         left, right = self.components()
         if self.operator() == "&":
             return left.evaluate(valuation) and right.evaluate(valuation)
@@ -335,7 +337,7 @@ class LogicFormula:
         """Checks if the logical formula is falsifiable, i.e., it evaluates to false
         for at least one valuation."""
         return not self.is_tautology()
-    
+
     def get_falsifiable_valuations(self, string_atoms=False) -> list[dict]:
         """
         Returns a list of valuations that falsify the logical formula.
@@ -365,7 +367,7 @@ class LogicFormula:
             for row in truth_table[1:]
             if not row[-1]
         ]
-    
+
     def is_equivalent(self, other: LogicFormula) -> bool:
         """
         Checks if the current formula is logically equivalent to another formula instance.
@@ -522,6 +524,11 @@ class LogicFormula:
         if self.is_atomic():
             return f"{tab}\\node {{${self.operator()}$}}"
         string = f"{tab}\\node {{${latex[self.operator()]}$}}"
+        subformulas = (
+            self.components()
+            if isinstance(self.components(), tuple)
+            else self.components()[0]
+        )
         for subformula in self.components():
             string += "\n" + tab + parse_tree(subformula)
         string += ";"
