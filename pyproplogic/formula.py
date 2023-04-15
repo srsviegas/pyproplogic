@@ -12,10 +12,10 @@ class LogicFormula:
 
     Attributes:
     -----------
-    _operator : str
+    _operator: str
         The operator of the logic formula, one of {atom, ~, &, |, ->, <->}
 
-    _components : str or LogicFormula objects
+    _components: str or LogicFormula objects
         The components of the logic formula, that are strings or LogicFormula objects.
 
     Notes:
@@ -43,7 +43,7 @@ class LogicFormula:
 
     """
 
-    _valid_operators = {"atom", "~", "&", "|", "->", "<->"}
+    _valid_operators = ("atom", "~", "&", "|", "->", "<->")
     _unicode_dict = {"~": "¬", "&": "∧", "|": "∨", "->": "→", "<->": "↔"}
     _utf_dict = {
         "~": "\u00AC",
@@ -53,11 +53,11 @@ class LogicFormula:
         "<->": "\u2194",
     }
     _latex_dict = {
-        "~": "\\lnot ",
-        "&": "\\land",
-        "|": "\\lor",
-        "->": "\\rightarrow",
-        "<->": "\\leftrightarrow",
+        "~": r"\lnot ",
+        "&": r"\land",
+        "|": r"\lor",
+        "->": r"\rightarrow",
+        "<->": r"\leftrightarrow",
     }
     _current_dict = _unicode_dict
 
@@ -101,20 +101,21 @@ class LogicFormula:
                 f"'in' requires LogicFormula as left operand, not {type(item).__name__}"
             )
         return (item.to_ascii()) in (self.to_ascii())
-    
+
     def __eq__(self, other) -> bool:
+        if isinstance(other, str):
+            return other == str(self)
         if self.operator() == other.operator():
-            if self.operator() in ('atom', '~'):
+            if self.operator() in ("atom", "~"):
                 return self.components() == other.components()
             return all(
-                self_subf == other_subf 
-                for self_subf, other_subf 
-                in zip(self.components(), other.components())
+                self_subf == other_subf
+                for self_subf, other_subf in zip(self.components(), other.components())
             )
 
     def __iter__(self) -> LogicFormula:
         return iter(self.get_subformulas())
-    
+
     def __hash__(self) -> int:
         return hash(str(self))
 
@@ -176,8 +177,14 @@ class LogicFormula:
 
         Returns:
         --------
-        atoms : list of str
+        atoms: list of str
             A list of all atoms of the current formula.
+
+        Examples:
+        ---------
+        >>> from pyproplogic.commonformulas import P, Q, R
+        >>> ((R >> (P & Q)) | P).get_atoms()
+        [LogicFormula(P), LogicFormula(Q), LogicFormula(R)]
 
         """
         if self.is_atomic():
@@ -198,8 +205,18 @@ class LogicFormula:
 
         Returns:
         --------
-        subformulas : list of str
+        subformulas: list of str
             A list of all subformulas of the current formula.
+
+        Examples:
+        ---------
+        >>> from pyproplogic.commonformulas import P, Q
+        >>> (P >> (P & ~Q)).get_subformulas()
+        [LogicFormula(P),
+        LogicFormula(Q),
+        LogicFormula(¬Q),
+        LogicFormula(P ∧ ¬Q),
+        LogicFormula(P → P ∧ ¬Q)]
 
         """
         if self.is_atomic():
@@ -218,16 +235,26 @@ class LogicFormula:
         -----------
         valuation: dict of bool
             A dictionary mapping atomic propositions to boolean truth values.
+            The keys can be either atomic LogicFormula objects or the atoms string representations.
 
         Returns:
-        bool
+        --------
+        truth_value: bool
             The truth value of the logic formula.
+
+        Examples:
+        ---------
+        >>> from pyproplogic.commonformulas import P, Q
+        >>> (P >> (P & ~Q)).evaluate({P: True, Q: False})
+        True
+        >>> (P & Q).evaluate({"P": True, "Q": False})
+        False
 
         """
         if self.is_atomic():
             return (
                 valuation[self]
-                if self in valuation
+                if self in valuation.keys()
                 else valuation[self.components()[0]]
             )
         elif self.operator() == "~":
@@ -265,6 +292,16 @@ class LogicFormula:
         --------
         truth_table: pandas.DataFrame or list of lists
             The truth table of the logical formula.
+
+        Examples:
+        ---------
+        >>> from pyproplogic.commonformulas import P, Q, DE_MORGAN_AND
+        >>> (P >> ~Q).get_truth_table(to_list=True)
+        [[LogicFormula(P), LogicFormula(Q), LogicFormula(¬Q), LogicFormula(P → ¬Q)],
+         [True, True, False, False],
+         [True, False, True, True],
+         [False, True, False, True],
+         [False, False, True, True]]
 
         """
         from itertools import product
@@ -315,7 +352,7 @@ class LogicFormula:
         return not self.is_contradiction()
 
     def get_satisfiable_valuations(self, string_atoms=False) -> list[dict]:
-        """
+        r"""
         Returns a list of valuations that satisfy the logical formula.
 
         Parameters:
@@ -332,8 +369,21 @@ class LogicFormula:
             Each element of the list is a dictionary, with atoms as keys and their corresponding
             boolean values.
 
+        Examples:
+        ---------
+        >>> from pyproplogic.commonformulas import P, Q
+        >>> implication = P >> Q
+        >>> print(implication.get_satisfiable_valuations())
+        [{LogicFormula(P): True, LogicFormula(Q): True},
+         {LogicFormula(P): False, LogicFormula(Q): True},
+         {LogicFormula(P): False, LogicFormula(Q): False}]
+        >>> implication.get_satisfiable_valuations(string_atoms=True)
+        [{'P': True, 'Q': True},
+         {'P': False, 'Q': True},
+         {'P': False, 'Q': False}]
+
         """
-        truth_table = self.get_truth_table(show_intermediate=True, to_list=True)
+        truth_table = self.get_truth_table(show_intermediate=False, to_list=True)
         atoms = truth_table[0][:-1]
         return [
             {
@@ -367,8 +417,17 @@ class LogicFormula:
             Each element of the list is a dictionary, with atoms as keys and their corresponding
             boolean values.
 
+        Examples:
+        ---------
+        >>> from pyproplogic.commonformulas import P, Q
+        >>> implication = P >> Q
+        >>> implication.get_falsifiable_valuations()
+        [{LogicFormula(P): True, LogicFormula(Q): False}]
+        >>> implication.get_falsifiable_valuations(string_atoms=True)
+        [{'P': True, 'Q': False}]
+
         """
-        truth_table = self.get_truth_table(show_intermediate=True, to_list=True)
+        truth_table = self.get_truth_table(show_intermediate=False, to_list=True)
         atoms = truth_table[0][:-1]
         return [
             {
@@ -388,6 +447,18 @@ class LogicFormula:
         other: LogicFormula
             The other LogicFormula object to be compared with the current formula.
 
+        Examples:
+        ---------
+        >>> from pyproplogic.commonformulas import P, Q
+        >>> P.is_equivalent(Q)
+        False
+        >>> P.is_equivalent(P | Q)
+        False
+        >>> (P & Q).is_equivalent(Q & P)
+        True
+        >>> (~(P & ~P)).is_equivalent(Q | ~Q)
+        True
+
         """
         return self.biconditional(other).is_tautology()
 
@@ -406,6 +477,24 @@ class LogicFormula:
         symbols: dict of str
             A dictionary containing the symbols to use.
             The dictionary doesn't need to be complete; any missing symbol will stay unchanged.
+        
+        Examples:
+        ---------
+        >>> P = LogicFormula.atom("P")
+        >>> Q = LogicFormula.atom("Q")
+        >>> formula = P >> ~(P & Q)
+        >>> print(formula)
+        P → ¬(P ∧ Q)
+        >>> LogicFormula.set_symbols({"&": "AND", "->": "IMPLIES"})
+        >>> print(formula)
+        P IMPLIES ¬(P AND Q)
+
+        See Also:
+        ---------
+        - `LogicFormula.set_unicode_symbols()` sets the representation to Unicode.
+        - `LogicFormula.set_utf_symbols()` sets the representation to UTF-8.
+        - `LogicFormula.set_ascii_symbols()` sets the representation to ASCII.
+        - `LogicFormula.set_latex_symbols()` sets the representation to LaTeX.
 
         """
         cls._current_dict = {
@@ -458,13 +547,13 @@ class LogicFormula:
         cls._current_dict = cls._latex_dict
 
     def to_latex(self) -> str:
-        """
+        r"""
         Returns a LaTeX string representation of the logic formula, with operators replaced by
         LaTeX commands.
 
         Returns:
         --------
-        latex_formula : str
+        latex_formula: str
             A string of LaTeX code that produces the symbolic representation of the logic formula.
 
         Examples:
@@ -473,7 +562,7 @@ class LogicFormula:
         >>> q = LogicFormula.atom('q')
         >>> formula = (p.conjunction(q.implication(p))).negation()
         >>> print(formula.to_latex())
-        \lnot (p \land (q \\rightarrow p))
+        \lnot (p \land (q \rightarrow p))
 
         """
         previous_dict = LogicFormula._current_dict
@@ -483,24 +572,24 @@ class LogicFormula:
         return latex_formula
 
     def to_latex_tikz(
-        self, tikz_parameters="sibling distance=25mm/#1", use_spaces=False
+        self, tikz_parameters="sibling distance=25mm/#1", use_tabs=False
     ) -> str:
-        """
+        r"""
         Returns a LaTeX string representation of the logic formula's parse tree for the TikZ package.
 
         Parameters:
         -----------
-        tikz_parameters : str, optional
+        tikz_parameters: str, optional
             String of TikZ parameters that will be used to customize the parse tree.
             Default value is 'sibling distance=25mm/#1'.
 
-        use_spaces : bool, optional
-            Boolean that indicates if spaces should be used instead of tabs.
+        use_tabs: bool, optional
+            Boolean that indicates if tabs should be used instead of spaces.
             Default value is False.
 
         Returns:
         --------
-        tikz_code : str
+        tikz_code: str
             A string of LaTeX code that produces the a graphical representation of the parse tree of
             the logic formula using the TikZ package.
 
@@ -510,16 +599,16 @@ class LogicFormula:
             >>> q = LogicFormula.atom('q')
             >>> formula = p.implication(q)
             >>> print(formula.to_latex_tikz())
-            \\begin{tikzpicture}
+            \begin{tikzpicture}
             [level/.style={sibling distance=25mm/#1}]
-                \\node {$\\rightarrow$}
+                \node {$\rightarrow$}
                     child {node {$p$}}
                     child {node {$q$}};
             \end{tikzpicture}
 
         """
         latex = LogicFormula._latex_dict
-        tab = " " * 4 if use_spaces else "\t"
+        tab = "\t" if use_tabs else " " * 4
         child_template = "child {{node {{${}$}}"
 
         def parse_tree(formula: LogicFormula, level=1) -> str:
