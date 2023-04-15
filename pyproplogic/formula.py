@@ -77,7 +77,7 @@ class LogicFormula:
 
     def __str__(self) -> str:
         if self.operator() == "atom":
-            return self.components()
+            return self.components()[0]
         precedence = {"atom": 4, "~": 3, "&": 2, "|": 2, "->": 1, "<->": 1}
         subformula_str = [
             f"({subformula})"
@@ -114,6 +114,9 @@ class LogicFormula:
 
     def __iter__(self) -> LogicFormula:
         return iter(self.get_subformulas())
+    
+    def __hash__(self) -> int:
+        return hash(str(self))
 
     def operator(self) -> str:
         """Returns the logic operator of the current formula."""
@@ -121,7 +124,7 @@ class LogicFormula:
 
     def components(self) -> tuple[LogicFormula]:
         """Returns a tuple containing the component(s) of the current formula."""
-        return self._components if len(self._components) > 1 else self._components[0]
+        return self._components
 
     @staticmethod
     def atom(symbol: str) -> LogicFormula:
@@ -179,8 +182,6 @@ class LogicFormula:
         """
         if self.is_atomic():
             return [self]
-        if self.operator() == "~":
-            return self.components().get_atoms()
         atoms = []
         for subformula in self.components():
             atoms.extend(subformula.get_atoms())
@@ -203,8 +204,6 @@ class LogicFormula:
         """
         if self.is_atomic():
             return [self]
-        elif self.operator() == "~":
-            return [self] + self.components().get_subformulas()
         else:
             subformulas = [self]
             for subformula in self.components():
@@ -227,10 +226,12 @@ class LogicFormula:
         """
         if self.is_atomic():
             return (
-                valuation[self] if self in valuation else valuation[self.components()]
+                valuation[self]
+                if self in valuation
+                else valuation[self.components()[0]]
             )
         elif self.operator() == "~":
-            return not self.components().evaluate(valuation)
+            return not self.components()[0].evaluate(valuation)
         left, right = self.components()
         if self.operator() == "&":
             return left.evaluate(valuation) and right.evaluate(valuation)
@@ -241,7 +242,7 @@ class LogicFormula:
         elif self.operator() == "<->":
             return left.evaluate(valuation) == right.evaluate(valuation)
 
-    def get_truth_table(self, show_only_finals=False, to_list=False):
+    def get_truth_table(self, show_intermediate=True, to_list=False):
         """
         Generates the truth table of the logical formula.
 
@@ -252,9 +253,9 @@ class LogicFormula:
 
         Parameters:
         -----------
-        show_only_finals: bool, optional
-            Decides if the truth table should only contain the atoms and final results.
-            Default value is False.
+        show_intermediate: bool, optional
+            Decides if the truth table should contain the intermediate results.
+            Default value is True.
 
         to_list: bool, optional
             Decides if the return value should be a list of lists instead of a DataFrame object.
@@ -279,10 +280,10 @@ class LogicFormula:
                 DataFrame = None
 
         atoms = self.get_atoms()
-        if show_only_finals:
-            subformulas = atoms + [self]
-        else:
+        if show_intermediate:
             subformulas = self.get_subformulas()
+        else:
+            subformulas = atoms + [self]
         table = []
         valuation_dicts = [
             {atom: value for atom, value in zip(atoms, valuation)}
@@ -299,13 +300,13 @@ class LogicFormula:
     def is_tautology(self) -> bool:
         """Checks if the logical formula is a tautology, i.e., it evaluates to true
         for all possible valuations."""
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)[1:]
+        truth_table = self.get_truth_table(show_intermediate=True, to_list=True)[1:]
         return all(row[-1] for row in truth_table)
 
     def is_contradiction(self) -> bool:
         """Checks if the logical formula is a contradiction, i.e., it evaluates to false
         for all possible valuations."""
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)[1:]
+        truth_table = self.get_truth_table(show_intermediate=True, to_list=True)[1:]
         return all(not row[-1] for row in truth_table)
 
     def is_satisfiable(self) -> bool:
@@ -332,7 +333,7 @@ class LogicFormula:
             boolean values.
 
         """
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        truth_table = self.get_truth_table(show_intermediate=True, to_list=True)
         atoms = truth_table[0][:-1]
         return [
             {
@@ -367,7 +368,7 @@ class LogicFormula:
             boolean values.
 
         """
-        truth_table = self.get_truth_table(show_only_finals=True, to_list=True)
+        truth_table = self.get_truth_table(show_intermediate=True, to_list=True)
         atoms = truth_table[0][:-1]
         return [
             {
@@ -534,11 +535,6 @@ class LogicFormula:
         if self.is_atomic():
             return f"{tab}\\node {{${self.operator()}$}}"
         string = f"{tab}\\node {{${latex[self.operator()]}$}}"
-        subformulas = (
-            self.components()
-            if isinstance(self.components(), tuple)
-            else self.components()[0]
-        )
         for subformula in self.components():
             string += "\n" + tab + parse_tree(subformula)
         string += ";"
