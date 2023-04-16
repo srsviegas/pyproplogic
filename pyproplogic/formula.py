@@ -34,12 +34,12 @@ class LogicFormula:
 
     Examples
     --------
-    >>> p = LogicFormula.atom('p')
-    >>> q = LogicFormula.atom('q')
-    >>> p.negation().conjunction(q.implication(p))
-    LogicFormula(¬p ∧ (q → p))
-    >>> print(~(p & q) << (~p | ~q))
-    ¬(p ∧ q) ↔ ¬p ∨ ¬q
+    >>> P = LogicFormula.atom('P')
+    >>> Q = LogicFormula.atom('Q')
+    >>> P.negation().conjunction(Q.implication(P))
+    LogicFormula(¬P ∧ (Q → P))
+    >>> ~(P & Q) << (~P | ~Q)
+    LogicFormula(¬(P ∧ Q) ↔ ¬P ∨ ¬Q)
 
     """
 
@@ -166,6 +166,37 @@ class LogicFormula:
 
     def __lshift__(self, other) -> LogicFormula:
         return LogicFormula("<->", self, other)
+
+    @staticmethod
+    def random(n: int, atom_list=None) -> LogicFormula:
+        """
+        Returns a LogicFormula made of random operators and atoms.
+
+        Paramteres
+        ----------
+        n: int
+            The height of the formula's parse tree.
+
+        atom_list: list[str], optional
+            A list of atom names to be picked. Default value is [P - Z].
+
+        """
+        import random
+
+        if n == 1:
+            return LogicFormula.atom(
+                random.choice(
+                    atom_list if atom_list else [chr(ord("P") + x) for x in range(11)]
+                )
+            )
+        operator = random.choice(("~", "&", "|", "->", "<->"))
+        if operator == "~":
+            return LogicFormula.random(n - 1, atom_list).negation()
+        return LogicFormula(
+            operator,
+            LogicFormula.random(n // 2, atom_list),
+            LogicFormula.random(n - n // 2, atom_list),
+        )
 
     def is_atomic(self) -> bool:
         """Determines if the current formula is an atom or not."""
@@ -477,7 +508,7 @@ class LogicFormula:
         symbols: dict of str
             A dictionary containing the symbols to use.
             The dictionary doesn't need to be complete; any missing symbol will stay unchanged.
-        
+
         Examples
         --------
         >>> P = LogicFormula.atom("P")
@@ -558,11 +589,11 @@ class LogicFormula:
 
         Examples
         --------
-        >>> p = LogicFormula.atom('p')
-        >>> q = LogicFormula.atom('q')
-        >>> formula = (p.conjunction(q.implication(p))).negation()
+        >>> P = LogicFormula.atom('P')
+        >>> Q = LogicFormula.atom('Q')
+        >>> formula = ~(P & (Q >> P))
         >>> print(formula.to_latex())
-        \lnot (p \land (q \rightarrow p))
+        \lnot (P \land (Q \rightarrow P))
 
         """
         previous_dict = LogicFormula._current_dict
@@ -595,15 +626,15 @@ class LogicFormula:
 
         Examples
         --------
-            >>> p = LogicFormula.atom('p')
-            >>> q = LogicFormula.atom('q')
-            >>> formula = p.implication(q)
+            >>> P = LogicFormula.atom('P')
+            >>> Q = LogicFormula.atom('Q')
+            >>> formula = P >> Q
             >>> print(formula.to_latex_tikz())
             \begin{tikzpicture}
             [level/.style={sibling distance=25mm/#1}]
                 \node {$\rightarrow$}
-                    child {node {$p$}}
-                    child {node {$q$}};
+                    child {node {$P$}}
+                    child {node {$Q$}};
             \end{tikzpicture}
 
         """
