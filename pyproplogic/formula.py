@@ -10,16 +10,16 @@ class LogicFormula:
     The class stores the formula's operators and components, where components are either atomic
     propositions or other logic formulas.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     _operator: str
         The operator of the logic formula, one of {atom, ~, &, |, ->, <->}
 
     _components: str or LogicFormula objects
         The components of the logic formula, that are strings or LogicFormula objects.
 
-    Notes:
-    ------
+    Notes
+    -----
     The class supports the use of Python's binary operators to construct formulas, with the following
     mapping between binary and logical operators:
 
@@ -32,8 +32,8 @@ class LogicFormula:
     Warning: The shift operators (>> and <<) have precedence over the operators & and |.
     Use parentheses to enforce the correct order of operations when using this style.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> p = LogicFormula.atom('p')
     >>> q = LogicFormula.atom('q')
     >>> p.negation().conjunction(q.implication(p))
@@ -175,13 +175,13 @@ class LogicFormula:
         """
         Returns a list containing all atoms of the formula.
 
-        Returns:
-        --------
+        Returns
+        -------
         atoms: list of str
             A list of all atoms of the current formula.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from pyproplogic.commonformulas import P, Q, R
         >>> ((R >> (P & Q)) | P).get_atoms()
         [LogicFormula(P), LogicFormula(Q), LogicFormula(R)]
@@ -203,13 +203,13 @@ class LogicFormula:
         calls this method on its subformulas, appending the results to the list, which is then
         sorted and returned with duplicates removed.
 
-        Returns:
-        --------
+        Returns
+        -------
         subformulas: list of str
             A list of all subformulas of the current formula.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from pyproplogic.commonformulas import P, Q
         >>> (P >> (P & ~Q)).get_subformulas()
         [LogicFormula(P),
@@ -231,19 +231,19 @@ class LogicFormula:
         """
         Evaluates the formula using the truth values given by a dictionary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         valuation: dict of bool
             A dictionary mapping atomic propositions to boolean truth values.
             The keys can be either atomic LogicFormula objects or the atoms string representations.
 
-        Returns:
-        --------
+        Returns
+        -------
         truth_value: bool
             The truth value of the logic formula.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from pyproplogic.commonformulas import P, Q
         >>> (P >> (P & ~Q)).evaluate({P: True, Q: False})
         True
@@ -273,13 +273,13 @@ class LogicFormula:
         """
         Generates the truth table of the logical formula.
 
-        Notes:
-        ------
+        Notes
+        -----
         By default, the table is returned as a pandas.DataFrame object. If the Pandas package is
         not found, the method returns a list of lists instead.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         show_intermediate: bool, optional
             Decides if the truth table should contain the intermediate results.
             Default value is True.
@@ -288,13 +288,13 @@ class LogicFormula:
             Decides if the return value should be a list of lists instead of a DataFrame object.
             Default value is False.
 
-        Returns:
-        --------
+        Returns
+        -------
         truth_table: pandas.DataFrame or list of lists
             The truth table of the logical formula.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from pyproplogic.commonformulas import P, Q, DE_MORGAN_AND
         >>> (P >> ~Q).get_truth_table(to_list=True)
         [[LogicFormula(P), LogicFormula(Q), LogicFormula(¬Q), LogicFormula(P → ¬Q)],
@@ -355,22 +355,22 @@ class LogicFormula:
         r"""
         Returns a list of valuations that satisfy the logical formula.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         string_atoms: bool, optional
             Decides if the keys in the valuation dictionaries should be string representations of
             the atoms, instead of the LogicFormula objects.
             Default value is False.
 
-        Returns:
-        --------
+        Returns
+        -------
         satisfiable_valuations: list of dict
             List of all valuations that satisfy the logical formula.
             Each element of the list is a dictionary, with atoms as keys and their corresponding
             boolean values.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from pyproplogic.commonformulas import P, Q
         >>> implication = P >> Q
         >>> print(implication.get_satisfiable_valuations())
@@ -403,22 +403,22 @@ class LogicFormula:
         """
         Returns a list of valuations that falsify the logical formula.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         string_atoms: bool, optional
             Decides if the keys in the valuation dictionaries should be string representations of
             the atoms, instead of the LogicFormula objects.
             Default value is False.
 
-        Returns:
-        --------
+        Returns
+        -------
         falsifiable_valuations: list of dict
             List of all valuations that falsify the logical formula.
             Each element of the list is a dictionary, with atoms as keys and their corresponding
             boolean values.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from pyproplogic.commonformulas import P, Q
         >>> implication = P >> Q
         >>> implication.get_falsifiable_valuations()
@@ -442,13 +442,13 @@ class LogicFormula:
         """
         Checks if the current formula is logically equivalent to another formula instance.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         other: LogicFormula
             The other LogicFormula object to be compared with the current formula.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from pyproplogic.commonformulas import P, Q
         >>> P.is_equivalent(Q)
         False
@@ -472,14 +472,14 @@ class LogicFormula:
         """
         Sets the formula representation, with symbols provided by a dictionary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         symbols: dict of str
             A dictionary containing the symbols to use.
             The dictionary doesn't need to be complete; any missing symbol will stay unchanged.
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> P = LogicFormula.atom("P")
         >>> Q = LogicFormula.atom("Q")
         >>> formula = P >> ~(P & Q)
@@ -551,13 +551,13 @@ class LogicFormula:
         Returns a LaTeX string representation of the logic formula, with operators replaced by
         LaTeX commands.
 
-        Returns:
-        --------
+        Returns
+        -------
         latex_formula: str
             A string of LaTeX code that produces the symbolic representation of the logic formula.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> p = LogicFormula.atom('p')
         >>> q = LogicFormula.atom('q')
         >>> formula = (p.conjunction(q.implication(p))).negation()
@@ -577,8 +577,8 @@ class LogicFormula:
         r"""
         Returns a LaTeX string representation of the logic formula's parse tree for the TikZ package.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tikz_parameters: str, optional
             String of TikZ parameters that will be used to customize the parse tree.
             Default value is 'sibling distance=25mm/#1'.
@@ -587,14 +587,14 @@ class LogicFormula:
             Boolean that indicates if tabs should be used instead of spaces.
             Default value is False.
 
-        Returns:
-        --------
+        Returns
+        -------
         tikz_code: str
             A string of LaTeX code that produces the a graphical representation of the parse tree of
             the logic formula using the TikZ package.
 
-        Examples:
-        ---------
+        Examples
+        --------
             >>> p = LogicFormula.atom('p')
             >>> q = LogicFormula.atom('q')
             >>> formula = p.implication(q)
