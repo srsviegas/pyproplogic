@@ -59,7 +59,7 @@ class LogicFormula:
         "->": r"\rightarrow",
         "<->": r"\leftrightarrow",
     }
-    _current_dict = _unicode_dict
+    _current_dict = _utf_dict
 
     def __init__(self, operator: str, *components: LogicFormula):
         if operator not in LogicFormula._valid_operators:
