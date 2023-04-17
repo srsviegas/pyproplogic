@@ -1,4 +1,4 @@
-from pyproplogic.commonformulas import PHI, PSI, CHI
+from pyproplogic.common import PHI, PSI, CHI
 
 DOUBLE_NEGATION = (~~PHI) == (PHI)
 

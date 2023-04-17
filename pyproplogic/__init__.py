@@ -1,6 +1,5 @@
-from pyproplogic.formula import LogicFormula
+from .logic_formula import LogicFormula
+from .random_formula import random_formula
 
-__title__ = 'pyproplogic'
-__author__ = 'srsviegas'
-
-__all__ = ['LogicFormula']
+__title__ = "pyproplogic"
+__author__ = "srsviegas"

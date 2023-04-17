@@ -171,7 +171,7 @@ class LogicFormula:
 
         Examples
         --------
-        >>> from pyproplogic.commonformulas import P, Q, R
+        >>> from pyproplogic.common import P, Q, R
         >>> ((R >> (P & Q)) | P).get_atoms()
         [LogicFormula(P), LogicFormula(Q), LogicFormula(R)]
 
@@ -199,7 +199,7 @@ class LogicFormula:
 
         Examples
         --------
-        >>> from pyproplogic.commonformulas import P, Q
+        >>> from pyproplogic.common import P, Q
         >>> (P >> (P & ~Q)).get_subformulas()
         [LogicFormula(P),
         LogicFormula(Q),
@@ -233,7 +233,7 @@ class LogicFormula:
 
         Examples
         --------
-        >>> from pyproplogic.commonformulas import P, Q
+        >>> from pyproplogic.common import P, Q
         >>> (P >> (P & ~Q)).eval({P: True, Q: False})
         True
         >>> (P & Q).eval({"P": True, "Q": False})
@@ -284,7 +284,7 @@ class LogicFormula:
 
         Examples
         --------
-        >>> from pyproplogic.commonformulas import P, Q, DE_MORGAN_AND
+        >>> from pyproplogic.common import P, Q, DE_MORGAN_AND
         >>> (P >> ~Q).get_truth_table(to_list=True)
         [[LogicFormula(P), LogicFormula(Q), LogicFormula(¬Q), LogicFormula(P → ¬Q)],
          [True, True, False, False],
@@ -360,7 +360,7 @@ class LogicFormula:
 
         Examples
         --------
-        >>> from pyproplogic.commonformulas import P, Q
+        >>> from pyproplogic.common import P, Q
         >>> implication = P >> Q
         >>> print(implication.get_satisfiable_valuations())
         [{LogicFormula(P): True, LogicFormula(Q): True},
@@ -408,7 +408,7 @@ class LogicFormula:
 
         Examples
         --------
-        >>> from pyproplogic.commonformulas import P, Q
+        >>> from pyproplogic.common import P, Q
         >>> implication = P >> Q
         >>> implication.get_falsifiable_valuations()
         [{LogicFormula(P): True, LogicFormula(Q): False}]
@@ -438,7 +438,7 @@ class LogicFormula:
 
         Examples
         --------
-        >>> from pyproplogic.commonformulas import P, Q
+        >>> from pyproplogic.common import P, Q
         >>> P.is_equivalent(Q)
         False
         >>> P.is_equivalent(P | Q)

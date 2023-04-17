@@ -1,4 +1,4 @@
-from pyproplogic.commonformulas import P, Q, R, DE_MORGAN_AND, IMPLICATION
+from pyproplogic.common import P, Q, R, DE_MORGAN_AND, IMPLICATION
 
 
 def test_is_tautology():

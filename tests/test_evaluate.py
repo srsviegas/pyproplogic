@@ -1,4 +1,4 @@
-from pyproplogic.commonformulas import P, Q, R, S, T
+from pyproplogic.common import P, Q, R, S, T
 
 
 def test_evaluate_conjunction():

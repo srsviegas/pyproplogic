@@ -24,9 +24,9 @@ def random_formula(n: int, atom_list=None) -> LogicFormula:
         )
     operator = random.choice(("~", "&", "|", "->", "<->"))
     if operator == "~":
-        return LogicFormula.random(n - 1, atom_list).negation()
+        return random_formula(n - 1, atom_list).negation()
     return LogicFormula(
         operator,
-        LogicFormula.random(n // 2, atom_list),
-        LogicFormula.random(n - n // 2, atom_list),
+        random_formula(n // 2, atom_list),
+        random_formula(n - n // 2, atom_list),
     )
