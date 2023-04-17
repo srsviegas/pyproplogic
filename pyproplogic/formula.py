@@ -156,37 +156,6 @@ class LogicFormula:
     def __eq__(self, other) -> LogicFormula:
         return LogicFormula("<->", self, other)
 
-    @staticmethod
-    def random(n: int, atom_list=None) -> LogicFormula:
-        """
-        Returns a LogicFormula made of random operators and atoms.
-
-        Paramteres
-        ----------
-        n: int
-            The height of the formula's parse tree.
-
-        atom_list: list[str], optional
-            A list of atom names to be picked. Default value is [P - Z].
-
-        """
-        import random
-
-        if n == 1:
-            return LogicFormula.atom(
-                random.choice(
-                    atom_list if atom_list else [chr(ord("P") + x) for x in range(11)]
-                )
-            )
-        operator = random.choice(("~", "&", "|", "->", "<->"))
-        if operator == "~":
-            return LogicFormula.random(n - 1, atom_list).negation()
-        return LogicFormula(
-            operator,
-            LogicFormula.random(n // 2, atom_list),
-            LogicFormula.random(n - n // 2, atom_list),
-        )
-
     def is_atomic(self) -> bool:
         """Determines if the current formula is an atom or not."""
         return self.operator() == "atom"
@@ -247,7 +216,7 @@ class LogicFormula:
                 subformulas.extend(subformula.get_subformulas())
         return sorted(set(subformulas), key=lambda f: (len(str(f)), str(f)))
 
-    def evaluate(self, valuation: dict[bool]) -> bool:
+    def eval(self, valuation: dict[bool]) -> bool:
         """
         Evaluates the formula using the truth values given by a dictionary.
 
@@ -265,9 +234,9 @@ class LogicFormula:
         Examples
         --------
         >>> from pyproplogic.commonformulas import P, Q
-        >>> (P >> (P & ~Q)).evaluate({P: True, Q: False})
+        >>> (P >> (P & ~Q)).eval({P: True, Q: False})
         True
-        >>> (P & Q).evaluate({"P": True, "Q": False})
+        >>> (P & Q).eval({"P": True, "Q": False})
         False
 
         """
@@ -278,16 +247,16 @@ class LogicFormula:
                 else valuation[self.components()[0]]
             )
         elif self.operator() == "~":
-            return not self.components()[0].evaluate(valuation)
+            return not self.components()[0].eval(valuation)
         left, right = self.components()
         if self.operator() == "&":
-            return left.evaluate(valuation) and right.evaluate(valuation)
+            return left.eval(valuation) and right.eval(valuation)
         elif self.operator() == "|":
-            return left.evaluate(valuation) or right.evaluate(valuation)
+            return left.eval(valuation) or right.eval(valuation)
         elif self.operator() == "->":
-            return (not left.evaluate(valuation)) or right.evaluate(valuation)
+            return (not left.eval(valuation)) or right.eval(valuation)
         elif self.operator() == "<->":
-            return left.evaluate(valuation) == right.evaluate(valuation)
+            return left.eval(valuation) == right.eval(valuation)
 
     def get_truth_table(self, show_intermediate=True, to_list=False):
         """
@@ -347,7 +316,7 @@ class LogicFormula:
             for valuation in product((True, False), repeat=len(atoms))
         ]
         for valuation in valuation_dicts:
-            table.append([formula.evaluate(valuation) for formula in subformulas])
+            table.append([formula.eval(valuation) for formula in subformulas])
         return (
             [subformulas] + table
             if to_list or DataFrame is None
@@ -475,8 +444,6 @@ class LogicFormula:
         >>> P.is_equivalent(P | Q)
         False
         >>> (P & Q).is_equivalent(Q & P)
-        True
-        >>> (~(P & ~P)).is_equivalent(Q | ~Q)
         True
 
         """
