@@ -27,9 +27,9 @@ class LogicFormula:
     - & represents conjunction ('and')
     - | represents disjunction ('or')
     - >> represents implication ('if.. then')
-    - << represents equality ('if and only if')
+    - == represents equality ('if and only if')
 
-    Warning: The shift operators (>> and <<) have precedence over the operators & and |.
+    Warning: The shift operator have precedence over the operators & and |.
     Use parentheses to enforce the correct order of operations when using this style.
 
     Examples
@@ -38,7 +38,7 @@ class LogicFormula:
     >>> Q = LogicFormula.atom('Q')
     >>> P.negation().conjunction(Q.implication(P))
     LogicFormula(¬P ∧ (Q → P))
-    >>> ~(P & Q) << (~P | ~Q)
+    >>> ~(P & Q) == (~P | ~Q)
     LogicFormula(¬(P ∧ Q) ↔ ¬P ∨ ¬Q)
 
     """
@@ -102,17 +102,6 @@ class LogicFormula:
             )
         return (item.to_ascii()) in (self.to_ascii())
 
-    def __eq__(self, other) -> bool:
-        if isinstance(other, str):
-            return other == str(self)
-        if self.operator() == other.operator():
-            if self.operator() in ("atom", "~"):
-                return self.components() == other.components()
-            return all(
-                self_subf == other_subf
-                for self_subf, other_subf in zip(self.components(), other.components())
-            )
-
     def __iter__(self) -> LogicFormula:
         return iter(self.get_subformulas())
 
@@ -164,7 +153,7 @@ class LogicFormula:
         """Creates a LogicFormula object containing a biconditional between self and other."""
         return LogicFormula("<->", self, other)
 
-    def __lshift__(self, other) -> LogicFormula:
+    def __eq__(self, other) -> LogicFormula:
         return LogicFormula("<->", self, other)
 
     @staticmethod

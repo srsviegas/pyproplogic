@@ -32,12 +32,7 @@ def test_is_falsifiable():
 def test_satisfiable_valuations():
     valuations = [
         set(tuple(v.values()) for v in f.get_satisfiable_valuations())
-        for f in (
-            P & Q, 
-            P | ~P, 
-            P >> Q, 
-            P >> ~P
-        )
+        for f in (P & Q, P | ~P, P >> Q, P >> ~P)
     ]
     assert valuations[0] == {(True, True)}
     assert valuations[1] == {(True,), (False,)}
@@ -48,12 +43,7 @@ def test_satisfiable_valuations():
 def test_falsifiable_valuations():
     valuations = [
         set(tuple(v.values()) for v in f.get_falsifiable_valuations())
-        for f in (
-            P & Q, 
-            P | ~P, 
-            P >> Q, 
-            P >> ~P
-        )
+        for f in (P & Q, P | ~P, P >> Q, P >> ~P)
     ]
     assert valuations[0] == {(True, False), (False, True), (False, False)}
     assert not valuations[1]
@@ -64,7 +54,7 @@ def test_falsifiable_valuations():
 def test_is_equivalent():
     assert DE_MORGAN_AND.is_equivalent(IMPLICATION)
     assert IMPLICATION.components()[0].is_equivalent(IMPLICATION.components()[1])
-    assert (P << Q).is_equivalent((P >> Q) & (Q >> P))
+    assert (P == Q).is_equivalent((P >> Q) & (Q >> P))
     assert P.is_equivalent(P)
     assert P.is_equivalent(P & (Q >> Q))
     assert not P.is_equivalent(P | Q)
