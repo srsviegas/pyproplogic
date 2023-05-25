@@ -1,6 +1,6 @@
 # PyPropLogic
 
-> **Note: this project is still in early development, and many of it's features are not yet available.**
+> **Note: this project is still in early development, and many of its features are not yet available.**
 
 PyPropLogic is a Python library for parsing, manipulating, and visualizing propositional
 logic. It provides a set of tools to build and manipulate propositional formulas, and to
